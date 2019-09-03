@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
 
-namespace StarterBot.Models {
-    internal class GameState {
-        public GameState(Settings settings) {
+namespace StarterBot.Models
+{
+    internal class GameState
+    {
+        public GameState(Settings settings)
+        {
             Settings = settings;
         }
 

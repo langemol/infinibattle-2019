@@ -1,5 +1,9 @@
-﻿namespace StarterBot.Models {
-    internal class Ship {
+﻿using System;
+
+namespace StarterBot.Models
+{
+    internal class Ship
+    {
         public float X { get; set; }
         public float Y { get; set; }
         public int TargetId { get; set; }

@@ -1,5 +1,7 @@
-﻿namespace StarterBot.Models {
-    internal class Move {
+﻿namespace StarterBot.Models
+{
+    internal class Move
+    {
         public Move(float power, int source, int target)
         {
             Power = power;
@@ -11,7 +13,8 @@
         public int Source { get; set; }
         public int Target { get; set; }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return $"send-ship {Power} {Source} {Target}";
         }
     }

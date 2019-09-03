@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using StarterBot.Models;
 
-namespace StarterBot {
+namespace StarterBot
+{
     internal static class Bot
     {
         public static void Start(Func<GameState, Move[]> strategy)
@@ -116,26 +117,31 @@ namespace StarterBot {
             return parts.Skip(1).Select(int.Parse).ToArray();
         }
 
-    private static List<Ship> ReadShips() {
+        private static List<Ship> ReadShips()
+        {
             var shipCount = ReadInt("num-ships");
             var ships = new List<Ship>();
 
-            for (var i = 0; i < shipCount; i++) {
+            for (var i = 0; i < shipCount; i++)
+            {
                 ships.Add(ReadShip());
             }
 
             return ships;
         }
 
-        private static Ship ReadShip() {
+        private static Ship ReadShip()
+        {
             var line = Console.ReadLine();
             var parts = line.Split();
 
-            if (parts.Length != 6 || parts[0] != "ship") {
+            if (parts.Length != 6 || parts[0] != "ship")
+            {
                 throw new Exception($"Expected 'ship <x> <y> <target_id> <owner> <power>', got '{line}'");
             }
 
-            return new Ship {
+            return new Ship
+            {
                 X = float.Parse(parts[1]),
                 Y = float.Parse(parts[2]),
                 TargetId = int.Parse(parts[3]),
@@ -144,8 +150,10 @@ namespace StarterBot {
             };
         }
 
-        private static int? ParseOwner(string owner) {
-            if (owner == "neutral") {
+        private static int? ParseOwner(string owner)
+        {
+            if (owner == "neutral")
+            {
                 return null;
             }
 

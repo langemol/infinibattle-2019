@@ -1,5 +1,7 @@
-﻿namespace StarterBot.Models {
-    internal class Settings {
+﻿namespace StarterBot.Models
+{
+    internal class Settings
+    {
         public int Seed { get; set; }
 
         public int Players { get; set; }

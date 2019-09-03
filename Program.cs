@@ -5,9 +5,12 @@ using System.Linq;
 using System.Threading;
 using StarterBot.Models;
 
-namespace StarterBot {
-    internal class Program {
-        private static void Main() {
+namespace StarterBot
+{
+    internal class Program
+    {
+        private static void Main()
+        {
             // Set application culture.
             SetApplicationCulture();
 
