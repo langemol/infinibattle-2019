@@ -12,5 +12,8 @@ namespace StarterBot.Models
         public Settings Settings { get; }
         public List<Planet> Planets { get; set; }
         public List<Ship> Ships { get; set; }
+
+        // HealthFriendlyTotal
+        // HealthHostileTotal //ForUser[] not necessary in 2player
     }
 }
