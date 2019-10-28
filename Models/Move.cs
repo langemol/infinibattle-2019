@@ -1,6 +1,6 @@
 ﻿namespace StarterBot.Models
 {
-    internal class Move
+    public class Move
     {
         public Move(float power, int source, int target)
         {

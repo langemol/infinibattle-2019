@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using StarterBot.Models;
 
 namespace StarterBot
 {
-    internal static class Bot
+    public static class Bot
     {
-        public static void Start(Func<GameState, Move[]> strategy)
+        public static void Start(Func<GameState, int, Move[]> strategy)
         {
             var settings = new Settings
             {
@@ -16,34 +17,82 @@ namespace StarterBot
                 Players = ReadInt("num-players"),
                 PlayerId = ReadInt("player-id")
             };
+            var gamestate = new GameState(settings);
 
+            var turn = 0;
             string line;
             while ((line = Console.ReadLine()) != "game-end")
             {
-                var gamestate = new GameState(settings);
+                turn++;
+                if (line != "turn-init") throw new Exception($"Expected 'turn-init', got '{line}'");
 
-                // Turn init
-                if (line != "turn-init")
-                {
-                    throw new Exception($"Expected 'turn-init', got '{line}'");
-                }
-
-                gamestate.Planets = ReadPlanets();
-                gamestate.Ships = ReadShips();
+                var planets = ReadPlanets();
+                var ships = ReadShips();
 
                 line = Console.ReadLine();
-                if (line != "turn-start")
+                if (line != "turn-start") throw new Exception($"Expected 'turn-start', got '{line}");
+                
+                if (turn == 1)
                 {
-                    throw new Exception($"Expected 'turn-start', got '{line}");
+                    var gamePlanets = MapToGamePlanets(planets);
+                    gamestate.Planets = gamePlanets;
+                    gamestate.Ships = ships;
+                }
+                else
+                {
+                    AdjustForTurn(gamestate, planets, ships);
                 }
 
-                foreach (var move in strategy.Invoke(gamestate))
+                var moves = strategy.Invoke(gamestate, turn);
+                foreach (var move in moves)
                 {
                     Console.WriteLine(move);
                 }
 
                 Console.WriteLine("end-turn");
             }
+        }
+
+        private static List<Planet> MapToGamePlanets(IEnumerable<BarePlanetState> planets)
+        {
+            var result = new List<Planet>();
+            foreach (var planet in planets)
+            {
+                result.Add(new Planet
+                {
+                    Id = planet.Id,
+                    Health = planet.Health,
+                    X = planet.X,
+                    Y = planet.Y,
+                    Owner = planet.Owner,
+                    Radius = planet.Radius,
+                    Neighbors = planet.Neighbors
+                });
+            }
+
+            return result;
+        }
+
+        private static void AdjustForTurn(GameState gamestate, List<BarePlanetState> planets, List<Ship> ships)
+        {
+            var gamePlanets = gamestate.PlanetsById;
+            AdjustForTurn(gamePlanets, planets);
+
+            gamestate.Ships = ships;
+        }
+
+        private static void AdjustForTurn(ImmutableSortedDictionary<int, Planet> gamePlanets, List<BarePlanetState> newState)
+        {
+            foreach (var planet in newState)
+            {
+                AdjustForTurn(gamePlanets[planet.Id], planet);
+            }
+        }
+
+        private static void AdjustForTurn(Planet gamePlanet, BarePlanetState newState)
+        {
+            gamePlanet.Health = newState.Health;
+            gamePlanet.Owner = newState.Owner;
         }
 
         private static string ReadValue(string key)
@@ -69,10 +118,10 @@ namespace StarterBot
             return float.Parse(ReadValue(key));
         }
 
-        private static List<Planet> ReadPlanets()
+        private static List<BarePlanetState> ReadPlanets()
         {
             var planetCount = ReadInt("num-planets");
-            var planets = new List<Planet>();
+            var planets = new List<BarePlanetState>();
 
             for (var i = 0; i < planetCount; i++)
             {
@@ -82,7 +131,7 @@ namespace StarterBot
             return planets;
         }
 
-        private static Planet ReadPlanet()
+        private static BarePlanetState ReadPlanet()
         {
             var line = Console.ReadLine();
             var parts = line.Split();
@@ -92,7 +141,7 @@ namespace StarterBot
                 throw new Exception($"Expected 'planet <id> <x> <y> <radius> <owner> <health>', got '{line}'");
             }
 
-            return new Planet
+            return new BarePlanetState
             {
                 Id = int.Parse(parts[1]),
                 X = float.Parse(parts[2]),

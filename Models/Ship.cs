@@ -2,7 +2,7 @@
 
 namespace StarterBot.Models
 {
-    internal class Ship
+    public class Ship : IProperty
     {
         public float X { get; set; }
         public float Y { get; set; }
@@ -11,8 +11,14 @@ namespace StarterBot.Models
         public int? Owner { get; set; }
         public float Power { get; set; }
 
-        private const float Speed = 15.0f;
+        public const float Speed = 15.0f;
 
-        public int TurnsToReachTarget => (int) Math.Ceiling(Target.DistanceTo(this) / Speed);
+        public int TurnsToReachTarget => DistanceToTurns(Target.DistanceTo(this));
+        public Friendlyness Friendlyness { get; set; }
+
+        public static int DistanceToTurns(float distance)
+        {
+            return (int) Math.Ceiling(distance / Speed);
+        }
     }
 }
