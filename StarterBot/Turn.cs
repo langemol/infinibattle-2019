@@ -258,13 +258,15 @@ namespace StarterBot
         /// </summary>
         private void AdjustGamestateForNewMove(float movePower, Planet source, Planet target)
         {
-//            var newShip = new Ship
-//            {
-//                Friendlyness = Friendlyness.Owner, Owner = _gameState.Settings.PlayerId, Power = movePower, Target = target,
-//                TargetId = target.Id, X = source.X, Y = source.Y
-//            };
-//            _gameState.Ships.Add(newShip);
-//            target.InboundShips.Add(newShip);
+            var newShip = new Ship
+            {
+                Friendlyness = Friendlyness.Owner, Owner = _gameState.Settings.PlayerId, Power = movePower, Target = target,
+                TargetId = target.Id, X = source.X, Y = source.Y
+            };
+            _gameState.Ships.Add(newShip);
+            var targetInboundShips = target.InboundShips;
+            targetInboundShips.Add(newShip);
+            target.SetInboundShips(targetInboundShips);
         }
     }
 }
