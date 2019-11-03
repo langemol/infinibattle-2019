@@ -63,22 +63,21 @@ namespace StarterBot
                     }
                 }
 
-                //TODO help
-
+                var healthNeeded = planet.healthNeeded;
+                SendHelp(planetsThatCanEasilyHelp, healthNeeded, planet);
 
                 foreach (var hostiles in planet.p.InboundShips.Where(PH.IsHostile).GroupBy(s => s.TurnsToReachTarget).Skip(1))
                 {
                     var health = planet.p.GetHealthAtTurnKnown(hostiles.First().TurnsToReachTarget).health;
                     if (health < 0) // or PlanetMinHealth
                     {
-                        //help more
+                        SendHelp(planetsThatCanEasilyHelp, health*-1, planet);
                     }
                 }
             }
 
             
             var possibleTargets = GetPossibleTargets();
-
             if (possibleTargets.hostiles.Any())
             {
                 var target = possibleTargets.hostiles.First();
@@ -192,6 +191,18 @@ namespace StarterBot
             }
 
             return _moves;
+        }
+
+        private void SendHelp(List<Planet> planetsThatCanEasilyHelp, float healthNeeded,
+            (Planet p, int turn, float healthNeeded) planet)
+        {
+            foreach (var helper in planetsThatCanEasilyHelp)
+            {
+                var power = Math.Min(healthNeeded, helper.Health - PlanetMinHealth);
+                AddMove(power, helper, planet.p);
+                healthNeeded -= power;
+                if (healthNeeded <= 0) break;
+            }
         }
 
         private (IEnumerable<Planet> hostiles, IEnumerable<Planet> neutrals) GetPossibleTargets()
