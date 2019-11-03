@@ -9,7 +9,7 @@ namespace StarterBot
 {
     internal class Turn
     {
-        private const float PlanetMinHealth = 1.0F;
+        private const float PlanetMinHealth = 1.0001F;//little extra to be sure, because of rounding
         private const int MaxTurns = 500;
 
         private readonly int _turn;
