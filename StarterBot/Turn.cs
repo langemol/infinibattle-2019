@@ -109,6 +109,36 @@ namespace StarterBot
                 }
             }
 
+            if (possibleTargets.neutrals.Any())
+            {
+                var target = possibleTargets.neutrals.First();
+                var sources = target.NeighboringFriendlyPlanets;
+
+                var source = sources.First();
+                var sourceHealth = source.Target.Health - PlanetMinHealth;
+                var targetHealth = target.GetHealthAtTurnKnown(source.TurnsToReach).health;
+                
+                var powerNeeded = targetHealth + PlanetMinHealth;
+                if (sourceHealth >= powerNeeded) // only if enemy planet can be taken
+                {
+                    AddMove(powerNeeded, source.Target, target);// TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
+                }
+
+                // TODO loopje
+                var source2 = sources.Skip(1).First();
+                var source2Health = source2.Target.Health - PlanetMinHealth;
+                var targetHealth2 = target.GetHealthAtTurnKnown(source2.TurnsToReach).health;
+                
+                var powerNeeded2 = targetHealth2 + PlanetMinHealth;
+                if (sourceHealth + source2Health >= powerNeeded2) // only if enemy planet can be taken
+                {
+                    var hq = (sourceHealth + source2Health - powerNeeded2) / sourceHealth + source2Health;
+                    // TODO half/half? dichtste meest? dichtste wachten tot even ver?
+                    AddMove(hq*sourceHealth, source.Target, target);// TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
+                    AddMove(hq*source2Health, source2.Target, target);// TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
+                }
+            }
+
             // bij checken of je non-friendly planet wil aanvallen ook checken of je er niet al troepen heen hebt gestuurd
             foreach (var planet in planetsThatCanAttack)
             {
