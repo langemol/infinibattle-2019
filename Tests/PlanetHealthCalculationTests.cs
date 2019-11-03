@@ -23,7 +23,7 @@ namespace Tests
 
             var healthNextTurn = planet.GetHealthAtTurnKnown(1);
             
-            Assert.AreEqual(health + planet.GrowthSpeed, healthNextTurn);
+            Assert.AreEqual(health + planet.GrowthSpeed, healthNextTurn.health);
         }
 
         [Test]

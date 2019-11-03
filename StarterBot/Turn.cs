@@ -59,7 +59,7 @@ namespace StarterBot
                 var source = sources.First();
                 var sourceHealth = source.Target.Health - PlanetMinHealth;
                 var targetHealth = target.GetHealthAtTurnKnown(source.TurnsToReach).health;
-                
+
                 var powerNeeded = targetHealth + PlanetMinHealth;
                 if (sourceHealth >= powerNeeded) // only if enemy planet can be taken
                 {
@@ -67,17 +67,20 @@ namespace StarterBot
                 }
 
                 // TODO loopje
-                var source2 = sources.Skip(1).First();
-                var source2Health = source2.Target.Health - PlanetMinHealth;
-                var targetHealth2 = target.GetHealthAtTurnKnown(source2.TurnsToReach).health;
-                
-                var powerNeeded2 = targetHealth2 + PlanetMinHealth;
-                if (sourceHealth + source2Health >= powerNeeded2) // only if enemy planet can be taken
+                var source2 = sources.Skip(1).FirstOrDefault();
+                if (source2 != null)
                 {
-                    var hq = (sourceHealth + source2Health - powerNeeded2) / sourceHealth + source2Health;
-                    // TODO half/half? dichtste meest? dichtste wachten tot even ver?
-                    AddMove(hq*sourceHealth, source.Target, target);// TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
-                    AddMove(hq*source2Health, source2.Target, target);// TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
+                    var source2Health = source2.Target.Health - PlanetMinHealth;
+                    var targetHealth2 = target.GetHealthAtTurnKnown(source2.TurnsToReach).health;
+
+                var powerNeeded2 = targetHealth2 + PlanetMinHealth;
+                    if (sourceHealth + source2Health >= powerNeeded2) // only if enemy planet can be taken
+                    {
+                        var hq = (sourceHealth + source2Health - powerNeeded2) / sourceHealth + source2Health;
+                        // TODO half/half? dichtste meest? dichtste wachten tot even ver?
+                        AddMove(hq * sourceHealth, source.Target, target); // TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
+                        AddMove(hq * source2Health, source2.Target, target); // TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
+                    }
                 }
             }
 
@@ -89,7 +92,7 @@ namespace StarterBot
                 var source = sources.First();
                 var sourceHealth = source.Target.Health - PlanetMinHealth;
                 var targetHealth = target.GetHealthAtTurnKnown(source.TurnsToReach).health;
-                
+
                 var powerNeeded = targetHealth + PlanetMinHealth;
                 if (sourceHealth >= powerNeeded) // only if enemy planet can be taken
                 {
@@ -97,17 +100,20 @@ namespace StarterBot
                 }
 
                 // TODO loopje
-                var source2 = sources.Skip(1).First();
-                var source2Health = source2.Target.Health - PlanetMinHealth;
-                var targetHealth2 = target.GetHealthAtTurnKnown(source2.TurnsToReach).health;
-                
-                var powerNeeded2 = targetHealth2 + PlanetMinHealth;
-                if (sourceHealth + source2Health >= powerNeeded2) // only if enemy planet can be taken
+                var source2 = sources.Skip(1).FirstOrDefault();
+                if (source2 != null)
                 {
-                    var hq = (sourceHealth + source2Health - powerNeeded2) / sourceHealth + source2Health;
-                    // TODO half/half? dichtste meest? dichtste wachten tot even ver?
-                    AddMove(hq*sourceHealth, source.Target, target);// TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
-                    AddMove(hq*source2Health, source2.Target, target);// TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
+                    var source2Health = source2.Target.Health - PlanetMinHealth;
+                    var targetHealth2 = target.GetHealthAtTurnKnown(source2.TurnsToReach).health;
+
+                var powerNeeded2 = targetHealth2 + PlanetMinHealth;
+                    if (sourceHealth + source2Health >= powerNeeded2) // only if enemy planet can be taken
+                    {
+                        var hq = (sourceHealth + source2Health - powerNeeded2) / sourceHealth + source2Health;
+                        // TODO half/half? dichtste meest? dichtste wachten tot even ver?
+                        AddMove(hq * sourceHealth, source.Target, target); // TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
+                        AddMove(hq * source2Health, source2.Target, target); // TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
+                    }
                 }
             }
 
@@ -218,30 +224,31 @@ namespace StarterBot
             var possibleNeutralTargets = new List<(Planet, int)>();
             var possibleHostileTargets = new List<(Planet, int)>();
 
-            var closestEnemyPlanets = _gameState.Planets.Where(PH.IsHostile).Select(h => h.GetNearestPlanet(Friendlyness.Owner))
-                .OrderBy(o => o.TurnsToReach);
-            var neighbouringEnemyPlanets = closestEnemyPlanets.Where(e => e.Via == e.Target);
+            var closestEnemyPlanets = _gameState.Planets.Where(PH.IsHostile)
+                .Select(h => (h,h.GetNearestPlanet(Friendlyness.Owner)))
+                .OrderBy(o => o.Item2.TurnsToReach);
+            var neighbouringEnemyPlanets = closestEnemyPlanets.Where(e => e.Item2.Via == e.h);
             foreach (var nep in neighbouringEnemyPlanets)
             {
-                var (health, owner, ownerChanged) = nep.Target.GetHealthAtTurnKnown(nep.TurnsToReach);
+                var (health, owner, ownerChanged) = nep.h.GetHealthAtTurnKnown(nep.Item2.TurnsToReach);
 
                 if (ownerChanged)
                 {
                     continue;
                 }
 
-                var ttv = nep.Target.TimeToValueEnemyAdjusted(_turn, nep.TurnsToReach, health);
+                var ttv = nep.h.TimeToValueEnemyAdjusted(_turn, nep.Item2.TurnsToReach, health);
                 if (ttv >= MaxTurns) continue;
-                possibleHostileTargets.Add((nep.Target, ttv));
+                possibleHostileTargets.Add((nep.h, ttv));
             }
 
             var closestNeutralPlanets = _gameState.Planets.Where(PH.IsNeutral)
-                .Select(h => h.GetNearestPlanet(Friendlyness.Owner))
-                .OrderBy(o => o.TurnsToReach);
-            var neighbouringNeutralPlanets = closestNeutralPlanets.Where(e => e.Via == e.Target);
+                .Select(h => (h,h.GetNearestPlanet(Friendlyness.Owner)))
+                .OrderBy(o => o.Item2.TurnsToReach);
+            var neighbouringNeutralPlanets = closestNeutralPlanets.Where(e => e.Item2.Via == e.h);
             foreach (var nnp in neighbouringNeutralPlanets)
             {
-                var (health, owner, ownerChanged) = nnp.Target.GetHealthAtTurnKnown(nnp.TurnsToReach);
+                var (health, owner, ownerChanged) = nnp.h.GetHealthAtTurnKnown(nnp.Item2.TurnsToReach);
 
                 if (ownerChanged)
                 {
@@ -250,18 +257,18 @@ namespace StarterBot
                         continue;
                     }
 
-                    var ttv2 = nnp.Target.TimeToValueEnemyAdjusted(_turn, nnp.TurnsToReach, health);
+                    var ttv2 = nnp.h.TimeToValueEnemyAdjusted(_turn, nnp.Item2.TurnsToReach, health);
                     if (ttv2 >= MaxTurns) continue;
-                    possibleHostileTargets.Add((nnp.Target, ttv2));
+                    possibleHostileTargets.Add((nnp.h, ttv2));
                 }
 
-                var ttv = nnp.Target.TimeToValueNeutralAdjusted(_turn, nnp.TurnsToReach, health);
+                var ttv = nnp.h.TimeToValueNeutralAdjusted(_turn, nnp.Item2.TurnsToReach, health);
                 if (ttv >= MaxTurns) continue;
-                possibleNeutralTargets.Add((nnp.Target, ttv));
+                possibleNeutralTargets.Add((nnp.h, ttv));
             }
 
-            var hostiles = possibleHostileTargets.OrderBy(t=>t.Item2).Select(t=>t.Item1);
-            var neutrals = possibleNeutralTargets.OrderBy(t=>t.Item2).Select(t=>t.Item1);
+            var hostiles = possibleHostileTargets.OrderBy(t=>t.Item2).Select(t=>t.Item1).ToList();
+            var neutrals = possibleNeutralTargets.OrderBy(t=>t.Item2).Select(t=>t.Item1).ToList();
             return (hostiles, neutrals);
         }
 
@@ -312,6 +319,7 @@ namespace StarterBot
                 Friendlyness = Friendlyness.Owner, Owner = _gameState.Settings.PlayerId, Power = movePower, Target = target,
                 TargetId = target.Id, X = source.X, Y = source.Y
             };
+            source.Health -= movePower;
             _gameState.Ships.Add(newShip);
             var targetInboundShips = target.InboundShips;
             targetInboundShips.Add(newShip);

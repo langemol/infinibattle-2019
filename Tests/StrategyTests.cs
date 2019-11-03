@@ -37,15 +37,33 @@ namespace Tests
         public void Dont_send_more_power_then_needed_to_turn_planet()
         {
             var enemyDistanceTurns = 3;
-            var enemyPlanet = CreateEnemyPlanet(health:1F, x: 0, y: enemyDistanceTurns * CH.ShipSpeed);
+            var health = 1F;
+            var enemyPlanet = CreateEnemyPlanet(health:health, x: 0, y: enemyDistanceTurns * CH.ShipSpeed);
             var planets = new List<Planet> { CreatePlanet(), enemyPlanet };
             Connect(planets[0], planets[1]);
             var gameState = CreateGameState(planets);
 
             var moves = TheMoleStrategy.PlayTurn(gameState, 1);
 
-            Assert.LessOrEqual(enemyPlanet.GetHealthAtTurnKnown(enemyDistanceTurns), moves.Single().Power);
-            Assert.GreaterOrEqual(enemyPlanet.GetHealthAtTurnKnown(enemyDistanceTurns).health + 2, moves.Single().Power);
+            var enemyHealth = health+enemyDistanceTurns*enemyPlanet.GrowthSpeed;
+            var power = moves.Single().Power;
+            Assert.LessOrEqual(enemyHealth, power);
+            Assert.GreaterOrEqual(enemyHealth + 2, power);
+        }
+
+        [Test]
+        public void Dont_send_more_power_then_needed_to_turn_neutral_planet()
+        {
+            var enemyDistanceTurns = 3;
+            var enemyPlanet = CreatePlanet(health: 3F, x: 0, y: enemyDistanceTurns * CH.ShipSpeed, owner: null);
+            var planets = new List<Planet> { CreatePlanet(), enemyPlanet };
+            Connect(planets[0], planets[1]);
+            var gameState = CreateGameState(planets);
+
+            var moves = TheMoleStrategy.PlayTurn(gameState, 1);
+
+            Assert.LessOrEqual(3F, moves.Single().Power);
+            Assert.GreaterOrEqual(3F + 2, moves.Single().Power);
         }
 
         [Test]
@@ -75,7 +93,7 @@ namespace Tests
 
             var moves = TheMoleStrategy.PlayTurn(gameState, 1);
 
-            Assert.LessOrEqual(enemyPlanet.GetHealthAtTurnKnown(enemyDistanceTurns), moves.Single().Power);
+            Assert.LessOrEqual(enemyPlanet.GetHealthAtTurnKnown(enemyDistanceTurns).health, moves.Single().Power);
         }
 
         [Test]
@@ -97,7 +115,7 @@ namespace Tests
         // biggest first because it generates health more quickly
         public void Obliterate_Biggest_Of_Two_Enemy_Planets()
         {
-            var enemyHealth = 1F;
+            var enemyHealth = 6F;
             var myPlanet = CreatePlanet();
             var enemyPlanet = CreateEnemyPlanet(health: enemyHealth, x: 1F, y: 0, radius: 10);
             var planets = new List<Planet> { myPlanet, CreateEnemyPlanet(health: enemyHealth, x: 0, y: 1F, radius: 1), enemyPlanet };
@@ -129,7 +147,7 @@ namespace Tests
             p2.Neighbors = p2.Neighbors.Concat(new[] { p1.Id }).ToArray();
         }
 
-        private static Planet CreatePlanet(float health = 10F, int radius = 20, int owner = 0, float x = 0F, float y = 0F)
+        private static Planet CreatePlanet(float health = 10F, int radius = 20, int? owner = 0, float x = 0F, float y = 0F)
         {
             return new Planet { Id = _id++, Health = health, Owner = owner, Radius = radius, X = x, Y = y, Neighbors = new int[0] };
         }
