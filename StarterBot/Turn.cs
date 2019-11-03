@@ -45,36 +45,9 @@ namespace StarterBot
 
             var myPlanets = _gameState.Planets.Where(PH.IsMine).ToList();
             var planetsThatNeedHelp = GetPlanetsThatNeedHelp(myPlanets);
-
             var planetsThatCanAttack = new List<Planet>(myPlanets);
-            foreach (var planet in planetsThatNeedHelp)
-            {
-                planetsThatCanAttack.Remove(planet.p);
-
-                // van welke planeet (of combinatie van) kan hulp het beste komen?
-                var neighbours = planet.p.NeighboringFriendlyPlanets;
-                // evt aan te vullen door NeighboringFriendlyPlanet ook te markeren als 'needsHelp'?
-                var planetsThatCanEasilyHelp = new List<Planet>();
-                foreach (var neighbour in neighbours)
-                {
-                    if (!neighbour.Target.NeighboringHostilePlanets.Any())
-                    {
-                        planetsThatCanEasilyHelp.Add(neighbour.Target);
-                    }
-                }
-
-                var healthNeeded = planet.healthNeeded;
-                SendHelp(planetsThatCanEasilyHelp, healthNeeded, planet);
-
-                foreach (var hostiles in planet.p.InboundShips.Where(PH.IsHostile).GroupBy(s => s.TurnsToReachTarget).Skip(1))
-                {
-                    var health = planet.p.GetHealthAtTurnKnown(hostiles.First().TurnsToReachTarget).health;
-                    if (health < 0) // or PlanetMinHealth
-                    {
-                        SendHelp(planetsThatCanEasilyHelp, health*-1, planet);
-                    }
-                }
-            }
+            
+            HelpPlanets(planetsThatNeedHelp, planetsThatCanAttack);
 
             
             var possibleTargets = GetPossibleTargets();
@@ -172,14 +145,14 @@ namespace StarterBot
                 var target = closestEnemy ?? closestNeutral; // kan niet null zijn want eerste if checkt alles Mine
 //                var healthAtTurn = planet.GetHealthAtTurnKnown(target.TurnsToReach).health;
 
-                var targetHealth = target.Target.GetHealthAtTurnKnown(target.TurnsToReach).health;
-                if (targetHealth < PlanetMinHealth)//is al van mij?
+                var targetHealth = target.Target.GetHealthAtTurnKnown(target.TurnsToReach);
+                if (targetHealth.owner == _me)//is al van mij?
                 {
                     //choose other planet :) choose planet in loopje?
                     continue;
                 }
 
-                var powerNeeded = targetHealth + PlanetMinHealth;
+                var powerNeeded = targetHealth.health + PlanetMinHealth;
                 if (planet.Health - PlanetMinHealth > powerNeeded) // only if enemy planet can be taken
                 {
                     AddMove(powerNeeded, planet, target.Target);
@@ -194,6 +167,38 @@ namespace StarterBot
             }
 
             return _moves;
+        }
+
+        private void HelpPlanets(List<(Planet p, int turn, float healthNeeded)> planetsThatNeedHelp, List<Planet> planetsThatCanAttack)
+        {
+            foreach (var planet in planetsThatNeedHelp)
+            {
+                planetsThatCanAttack.Remove(planet.p);
+
+                // van welke planeet (of combinatie van) kan hulp het beste komen?
+                var neighbours = planet.p.NeighboringFriendlyPlanets;
+                // evt aan te vullen door NeighboringFriendlyPlanet ook te markeren als 'needsHelp'?
+                var planetsThatCanEasilyHelp = new List<Planet>();
+                foreach (var neighbour in neighbours)
+                {
+                    if (!neighbour.Target.NeighboringHostilePlanets.Any())
+                    {
+                        planetsThatCanEasilyHelp.Add(neighbour.Target);
+                    }
+                }
+
+                var healthNeeded = planet.healthNeeded;
+                SendHelp(planetsThatCanEasilyHelp, healthNeeded, planet);
+
+                foreach (var hostiles in planet.p.InboundShips.Where(PH.IsHostile).GroupBy(s => s.TurnsToReachTarget).Skip(1))
+                {
+                    var health = planet.p.GetHealthAtTurnKnown(hostiles.First().TurnsToReachTarget).health;
+                    if (health < 0) // or PlanetMinHealth
+                    {
+                        SendHelp(planetsThatCanEasilyHelp, health * -1, planet);
+                    }
+                }
+            }
         }
 
         private void SendHelp(List<Planet> planetsThatCanEasilyHelp, float healthNeeded,
