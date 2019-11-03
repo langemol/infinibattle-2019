@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
@@ -30,7 +31,7 @@ namespace Tests
             var turn = 1;
             Bot.AdjustGamestateForTurn(turn, gameState, planets, ships);
 
-            var moves = TheMoleStrategy.PlayTurn(gameState, turn);
+            var moves = TheMoleStrategy.PlayTurn(gameState, turn, new Stopwatch());
 
             var input2 = new StreamReader("../../../example-input-turn2.txt");
             Console.SetIn(input2);
@@ -40,7 +41,7 @@ namespace Tests
             turn++;
             Bot.AdjustGamestateForTurn(turn, gameState, planets, ships);
             
-            moves = TheMoleStrategy.PlayTurn(gameState, turn);
+            moves = TheMoleStrategy.PlayTurn(gameState, turn, new Stopwatch());
 
             Assert.AreEqual(1, gameState.Ships.Count);// is al niet meer 1 omdat PlayTurn er ook 1 toevoegd...
             Assert.AreEqual(1, gameState.PlanetsById[4].InboundShips.Count);
@@ -66,7 +67,7 @@ namespace Tests
             var turn = 1;
             Bot.AdjustGamestateForTurn(turn, gameState, planets, ships);
 
-            var moves = TheMoleStrategy.PlayTurn(gameState, turn);
+            var moves = TheMoleStrategy.PlayTurn(gameState, turn, new Stopwatch());
 
             var input2 = new StreamReader("../../../example-input-turn2.txt");
             Console.SetIn(input2);
@@ -76,11 +77,11 @@ namespace Tests
             turn++;
             Bot.AdjustGamestateForTurn(turn, gameState, planets, ships);
             
-            moves = TheMoleStrategy.PlayTurn(gameState, turn);
+            moves = TheMoleStrategy.PlayTurn(gameState, turn, new Stopwatch());
 
             
 
-            var input3 = new StreamReader("../../../example-input-speed.txt");
+            var input3 = new StreamReader("../../../example-input-speed2.txt");
             Console.SetIn(input3);
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -91,7 +92,7 @@ namespace Tests
             Bot.AdjustGamestateForTurn(turn, gameState, planets, ships);
             var x2 = watch.ElapsedMilliseconds;
             
-            moves = TheMoleStrategy.PlayTurn(gameState, turn);
+            moves = TheMoleStrategy.PlayTurn(gameState, turn, new Stopwatch());
             watch.Stop();
             var x3 = watch.ElapsedMilliseconds;
         }

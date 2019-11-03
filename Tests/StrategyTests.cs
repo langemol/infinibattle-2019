@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
 using StarterBot;
@@ -25,7 +26,7 @@ namespace Tests
             Connect(planets[0], planets[1]);
             var gameState = CreateGameState(planets);
 
-            var moves = TheMoleStrategy.PlayTurn(gameState, 1);
+            var moves = TheMoleStrategy.PlayTurn(gameState, 1, new Stopwatch());
 
             Assert.AreEqual(1, moves.Length);
             Assert.AreEqual(myPlanet.Id, moves.Single().Source);
@@ -43,7 +44,7 @@ namespace Tests
             Connect(planets[0], planets[1]);
             var gameState = CreateGameState(planets);
 
-            var moves = TheMoleStrategy.PlayTurn(gameState, 1);
+            var moves = TheMoleStrategy.PlayTurn(gameState, 1, new Stopwatch());
 
             var enemyHealth = health+enemyDistanceTurns*enemyPlanet.GrowthSpeed;
             var power = moves.Single().Power;
@@ -60,7 +61,7 @@ namespace Tests
             Connect(planets[0], planets[1]);
             var gameState = CreateGameState(planets);
 
-            var moves = TheMoleStrategy.PlayTurn(gameState, 1);
+            var moves = TheMoleStrategy.PlayTurn(gameState, 1, new Stopwatch());
 
             Assert.LessOrEqual(3F, moves.Single().Power);
             Assert.GreaterOrEqual(3F + 2, moves.Single().Power);
@@ -76,7 +77,7 @@ namespace Tests
             Connect(planets[0], planets[1]);
             var gameState = CreateGameState(planets);
 
-            var moves = TheMoleStrategy.PlayTurn(gameState, 1);
+            var moves = TheMoleStrategy.PlayTurn(gameState, 1, new Stopwatch());
 
             Assert.LessOrEqual(enemyHealth + enemyPlanet.GrowthSpeed * enemyDistanceTurns, moves.Single().Power);
         }
@@ -91,7 +92,7 @@ namespace Tests
             Connect(planets[0], planets[1]);
             var gameState = CreateGameState(planets, new List<Ship> { CreateEnemyShip(enemyPlanet, enemyDistanceTurns, 3) });
 
-            var moves = TheMoleStrategy.PlayTurn(gameState, 1);
+            var moves = TheMoleStrategy.PlayTurn(gameState, 1, new Stopwatch());
 
             Assert.LessOrEqual(enemyPlanet.GetHealthAtTurnKnown(enemyDistanceTurns).health, moves.Single().Power);
         }
@@ -106,7 +107,7 @@ namespace Tests
             Connect(planets[0], planets[1]);
             var gameState = CreateGameState(planets, new List<Ship> { CreateShip(enemyPlanet, enemyDistanceTurns, 10) });
 
-            var moves = TheMoleStrategy.PlayTurn(gameState, 1);
+            var moves = TheMoleStrategy.PlayTurn(gameState, 1, new Stopwatch());
 
             Assert.AreEqual(0, moves.Length);
         }
@@ -123,7 +124,7 @@ namespace Tests
             Connect(planets[0], planets[2]);
             var gameState = CreateGameState(planets);
 
-            var moves = TheMoleStrategy.PlayTurn(gameState, 1);
+            var moves = TheMoleStrategy.PlayTurn(gameState, 1, new Stopwatch());
 
             Assert.AreEqual(1, moves.Length);
             Assert.AreEqual(myPlanet.Id, moves.Single().Source);

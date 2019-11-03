@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using StarterBot.Models;
 
@@ -8,7 +9,7 @@ namespace StarterBot
 {
     public static class Bot
     {
-        public static void Start(Func<GameState, int, Move[]> strategy)
+        public static void Start(Func<GameState, int, Stopwatch, Move[]> strategy)
         {
             var gamestate = InitGameState();
 
@@ -16,6 +17,7 @@ namespace StarterBot
             string line;
             while ((line = Console.ReadLine()) != "game-end")
             {
+                var watch = Stopwatch.StartNew();
                 turn++;
                 if (line != "turn-init") throw new Exception($"Expected 'turn-init', got '{line}'");
 
@@ -24,10 +26,11 @@ namespace StarterBot
 
                 line = Console.ReadLine();
                 if (line != "turn-start") throw new Exception($"Expected 'turn-start', got '{line}");
-
+//                Console.WriteLine($"# {watch.ElapsedMilliseconds} Read input ");
                 AdjustGamestateForTurn(turn, gamestate, planets, ships);
-
-                var moves = strategy.Invoke(gamestate, turn);
+                
+//                Console.WriteLine($"# {watch.ElapsedMilliseconds} Adjusted gamestate");
+                var moves = strategy.Invoke(gamestate, turn, watch);
                 WriteMoves(moves);
             }
         }

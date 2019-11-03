@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using StarterBot.Models;
@@ -28,7 +29,7 @@ namespace StarterBot
             _moves = new List<Move>();
         }
 
-        public List<Move> Play()
+        public List<Move> Play(Stopwatch watch)
         {
 // first turn: 1 planet each, same size
             // get neutral planets nearest / highest TimeToValue / Biggest!
@@ -47,10 +48,13 @@ namespace StarterBot
             var planetsThatNeedHelp = GetPlanetsThatNeedHelp(myPlanets);
             var planetsThatCanAttack = new List<Planet>(myPlanets);
             
+//            Console.WriteLine($"# {watch.ElapsedMilliseconds} Checked helpless");
             HelpPlanets(planetsThatNeedHelp, planetsThatCanAttack);
             
+//            Console.WriteLine($"# {watch.ElapsedMilliseconds} helped helpless");
             
             var possibleTargets = GetPossibleTargets();
+//            Console.WriteLine($"# {watch.ElapsedMilliseconds} Checked targets");
             if (possibleTargets.hostiles.Any())
             {
                 var target = possibleTargets.hostiles.First();
@@ -86,6 +90,8 @@ namespace StarterBot
                         }
                     }
                 }
+            }
+//            Console.WriteLine($"# {watch.ElapsedMilliseconds} sent to hostiles");
 
             if (possibleTargets.neutrals.Any())
             {
@@ -122,12 +128,16 @@ namespace StarterBot
                         }
                     }
                 }
+            }
+//            Console.WriteLine($"# {watch.ElapsedMilliseconds} sent to neutrals");
 
             // bij checken of je non-friendly planet wil aanvallen ook checken of je er niet al troepen heen hebt gestuurd
             foreach (var planet in planetsThatCanAttack)
             {
+//                Console.WriteLine($"# {planet.Id}");
                 if (planet.NeighboringPlanets.All(PH.IsMine))// misschien ook als alleen Mine of Neutral, wanneer er andere planet is die wel NeighbouringEnemyPlanet heeft, om meer te focussen op enemy?
-                {
+                {// TODO mag ook als 1tje niet van mij is allemaal naar die sturen
+//                    Console.WriteLine($"# {planet.Id} surrounded by friendly");
                     if (!planet.InboundShips.Any(PH.IsHostile))
                     {
                         // TODO rekening houden met dat 1 van die planeten binnenkort naar de enemy gaat
@@ -143,14 +153,14 @@ namespace StarterBot
                 // check of planeet wel health kan missen
                 var enemies = planet.NeighboringHostilePlanets.ToList();
                 //planet.HealthPossibleToReceiveInTurns(enemyPlayer);
-                if (enemies.Any())
-                {
-                    foreach (var enemy in enemies)
-                    {
-                        var health = planet.GetHealthAtTurnKnown(enemy.TurnsToReach);
-                        var enemyHealth = enemy.Target.Health;
-                    }
-                }
+//                if (enemies.Any())
+//                {
+//                    foreach (var enemy in enemies)
+//                    {
+//                        var health = planet.GetHealthAtTurnKnown(enemy.TurnsToReach);
+//                        var enemyHealth = enemy.Target.Health;
+//                    }
+//                }
 
                 var closestEnemy = planet.NeighbouringPlanetsDistanceTurns.FirstOrDefault(n => PH.IsHostile(n.Target));
                 var closestNeutral = planet.NeighbouringPlanetsDistanceTurns.FirstOrDefault(n => PH.IsNeutral(n.Target));
@@ -165,7 +175,9 @@ namespace StarterBot
                 }
 
                 var powerNeeded = targetHealth.health + PlanetMinHealth;
-                if (planet.Health - PlanetMinHealth > powerNeeded) // only if enemy planet can be taken
+                var planetHealth = planet.Health- PlanetMinHealth;
+//                Console.WriteLine($"# {planet.Id} targetting {target.Target.Id} with {planetHealth} against {powerNeeded}");
+                if (planetHealth > powerNeeded) // only if enemy planet can be taken
                 {
                     AddMove(powerNeeded, planet, target.Target);
                     continue;
@@ -185,6 +197,7 @@ namespace StarterBot
         {
             foreach (var planet in planetsThatNeedHelp)
             {
+//                Console.WriteLine($"# planet {planet.p.Id} needs help");
                 planetsThatCanAttack.Remove(planet.p);
 
                 // van welke planeet (of combinatie van) kan hulp het beste komen?
@@ -218,7 +231,8 @@ namespace StarterBot
         {
             foreach (var helper in planetsThatCanEasilyHelp)
             {
-                var power = Math.Min(healthNeeded, helper.Health - PlanetMinHealth);
+                var helperHealth = helper.Health- PlanetMinHealth;
+                var power = Math.Min(healthNeeded, helperHealth);
                 AddMove(power, helper, planet.p);
                 healthNeeded -= power;
                 if (healthNeeded <= 0) break;
