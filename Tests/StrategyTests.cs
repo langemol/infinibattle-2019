@@ -37,7 +37,7 @@ namespace Tests
         public void Dont_send_more_power_then_needed_to_turn_planet()
         {
             var enemyDistanceTurns = 3;
-            var enemyPlanet = CreateEnemyPlanet(health:1F, x: 0, y: enemyDistanceTurns * Ship.Speed);
+            var enemyPlanet = CreateEnemyPlanet(health:1F, x: 0, y: enemyDistanceTurns * CH.ShipSpeed);
             var planets = new List<Planet> { CreatePlanet(), enemyPlanet };
             Connect(planets[0], planets[1]);
             var gameState = CreateGameState(planets);
@@ -53,7 +53,7 @@ namespace Tests
         {
             var enemyHealth = 1F;
             var enemyDistanceTurns = 3;
-            var enemyPlanet = CreateEnemyPlanet(health:enemyHealth, x: 0, y: enemyDistanceTurns * Ship.Speed);
+            var enemyPlanet = CreateEnemyPlanet(health:enemyHealth, x: 0, y: enemyDistanceTurns * CH.ShipSpeed);
             var planets = new List<Planet> { CreatePlanet(), enemyPlanet };
             Connect(planets[0], planets[1]);
             var gameState = CreateGameState(planets);
@@ -68,7 +68,7 @@ namespace Tests
         {
             var enemyHealth = 1F;
             var enemyDistanceTurns = 3;
-            var enemyPlanet = CreateEnemyPlanet(health:enemyHealth, x: 0, y: enemyDistanceTurns * Ship.Speed);
+            var enemyPlanet = CreateEnemyPlanet(health:enemyHealth, x: 0, y: enemyDistanceTurns * CH.ShipSpeed);
             var planets = new List<Planet> { CreatePlanet(), enemyPlanet };
             Connect(planets[0], planets[1]);
             var gameState = CreateGameState(planets, new List<Ship> { CreateEnemyShip(enemyPlanet, enemyDistanceTurns, 3) });
@@ -83,7 +83,7 @@ namespace Tests
         {
             var enemyHealth = 1F;
             var enemyDistanceTurns = 3;
-            var enemyPlanet = CreateEnemyPlanet(health:enemyHealth, x: 0, y: enemyDistanceTurns * Ship.Speed);
+            var enemyPlanet = CreateEnemyPlanet(health:enemyHealth, x: 0, y: enemyDistanceTurns * CH.ShipSpeed);
             var planets = new List<Planet> { CreatePlanet(), enemyPlanet };
             Connect(planets[0], planets[1]);
             var gameState = CreateGameState(planets, new List<Ship> { CreateShip(enemyPlanet, enemyDistanceTurns, 10) });
@@ -115,7 +115,7 @@ namespace Tests
 
         private static Ship CreateShip(BarePlanetState target, int distanceFromTarget, int power, int owner=0)
         {
-            return new Ship { Owner = owner, TargetId = target.Id, X = 0, Y = (distanceFromTarget - 1) * Ship.Speed, Power = power };
+            return new Ship { Owner = owner, TargetId = target.Id, X = 0, Y = (distanceFromTarget - 1) * CH.ShipSpeed, Power = power };
         }
 
         private static Ship CreateEnemyShip(BarePlanetState target, int distanceFromTarget, int power)

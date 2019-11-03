@@ -45,9 +45,10 @@ namespace StarterBot.Models
         {
             PlanetsById = Planets.ToImmutableSortedDictionary(p => p.Id, p => p);
 
+            // TODO dit is dubbelop .. allebei order by distanceturns
             Planets.ForEach(p=>p.NeighboringPlanets = Planets.Where(n=>p.Neighbors.Contains(n.Id)).OrderBy(n=>n.DistanceTo(p)).ToList());
-
             Planets.ForEach(p=>p.NeighbouringPlanetsDistanceTurns = CalculateNeighbouringPlanetsDistanceTurns(p));
+
             Planets.ForEach(p=>p.ShortestPaths = CalculateShortestPaths(p));
         }
 
@@ -57,7 +58,8 @@ namespace StarterBot.Models
 
             Ships.ForEach(s=>s.Friendlyness = DetermineFriendlyness(s.Owner));
             Ships.ForEach(s => s.Target = Planets.Single(p => p.Id == s.TargetId));
-            Planets.ForEach(p => p.SetInboundShips(Ships.Where(s => s.TargetId == p.Id)));
+            var shipsByTarget = Ships.GroupBy(s => s.TargetId).ToDictionary(s=>s.Key,s=>s.AsEnumerable());
+            Planets.ForEach(p=>p.SetInboundShips(shipsByTarget.GetValueOrDefault(p.Id, new List<Ship>())));
         }
 
         private List<OtherPlanet> CalculateShortestPaths(Planet planet)

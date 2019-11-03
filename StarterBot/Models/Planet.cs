@@ -7,7 +7,7 @@ using MoreLinq;
 
 namespace StarterBot.Models
 {
-    public class BarePlanetState
+    public class BarePlanetState : IHasCoordinates
     {
         public int Id { get; set; }
         public float X { get; set; }
@@ -160,23 +160,27 @@ namespace StarterBot.Models
         public List<OtherPlanet> ShortestPaths { get; set; }
         
         public List<NeighbouringPlanet> NeighbouringPlanetsDistanceTurns { get; set; }
+    }
 
+    public static class CH // CoordinateHelper
+    {
+        public const float ShipSpeed = 15.0f;
 
-        public int DistanceTo(Planet other)
+        private static int DistanceToTurns(float distance)
         {
-            return Ship.DistanceToTurns(DistanceTo(other.X, other.Y));
+            return (int) Math.Ceiling(distance / ShipSpeed);
         }
 
-        private float DistanceTo(float otherX, float otherY)
+        public static int DistanceTo(this IHasCoordinates self, IHasCoordinates target)
         {
-            var dx = otherX - X;
-            var dy = otherY - Y;
+            return DistanceToTurns(DistanceTo(self.X, self.Y, target.X, target.Y));
+        }
+
+        private static float DistanceTo(float x, float y, float otherX, float otherY)
+        {
+            var dx = otherX - x;
+            var dy = otherY - y;
             return MathF.Sqrt(dx * dx + dy * dy);
-        }
-
-        public float DistanceTo(Ship other)
-        {
-            return DistanceTo(other.X, other.Y);
         }
     }
 
