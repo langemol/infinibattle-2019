@@ -141,14 +141,17 @@ namespace StarterBot
             // bij checken of je non-friendly planet wil aanvallen ook checken of je er niet al troepen heen hebt gestuurd
             foreach (var planet in planetsThatCanAttack)
             {
-                if (planet.NeighboringPlanets.All(PH.IsMine) && !planet.InboundShips.Any(PH.IsHostile))// misschien ook als alleen Mine of Neutral, wanneer er andere planet is die wel NeighbouringEnemyPlanet heeft, om meer te focussen op enemy?
+                if (planet.NeighboringPlanets.All(PH.IsMine))// misschien ook als alleen Mine of Neutral, wanneer er andere planet is die wel NeighbouringEnemyPlanet heeft, om meer te focussen op enemy?
                 {
-                    // TODO rekening houden met dat 1 van die planeten binnenkort naar de enemy gaat
-                    var planetThatNeedsReinforcementsMost = 
-                        planet.NeighboringPlanets.OrderBy(p=>p.NearestEnemyPlanetTurns).First(); // TODO which planet is that, houd rekening met HealthMax
-                    // TODO divide between multiple planets?
-                    var movePower = planet.Health - PlanetMinHealth;
-                    AddMove(movePower, planet, planetThatNeedsReinforcementsMost);
+                    if (!planet.InboundShips.Any(PH.IsHostile))
+                    {
+                        // TODO rekening houden met dat 1 van die planeten binnenkort naar de enemy gaat
+                        var planetThatNeedsReinforcementsMost = 
+                            planet.NeighboringPlanets.OrderBy(p=>p.NearestEnemyPlanetTurns).First(); // TODO which planet is that, houd rekening met HealthMax
+                        // TODO divide between multiple planets?
+                        var movePower = planet.Health - PlanetMinHealth;
+                        AddMove(movePower, planet, planetThatNeedsReinforcementsMost);
+                    }
                     continue;
                 }
 
