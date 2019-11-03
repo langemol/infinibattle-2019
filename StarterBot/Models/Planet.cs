@@ -88,12 +88,14 @@ namespace StarterBot.Models
         public List<Ship> InboundShips { get; private set; } // calculated at turn start
         public void SetInboundShips(IEnumerable<Ship> ships)
         {
+            HealthAtTurnKnown=new Dictionary<int, (float health, int? owner, bool ownerChanged)>();
             InboundShips = ships.OrderBy(s => s.TurnsToReachTarget).ToList();
             HealthDiffInboundForTurns =
                 InboundShips.GroupBy(s => s.TurnsToReachTarget, s => s).ToDictionary(g => g.Key,
                     g => g.GroupBy(s2=>s2.Owner).Select(s=>(s.Key,s.Sum(s2 => s2.Power))));
         }
-        
+
+        private Dictionary<int,(float health, int? owner, bool ownerChanged)> HealthAtTurnKnown { get; set; }
         /// <summary>
         /// based on known inbound ships + growth!
         /// TODO check if Ship arrives first or new Health is added first!!
@@ -102,20 +104,26 @@ namespace StarterBot.Models
         // TODO calculate at turn start
         public (float health, int? owner, bool ownerChanged) GetHealthAtTurnKnown(int turn)
         {
-            var statusAtTurnStart = turn <= 1 ? (Health, Owner, false) : GetHealthAtTurnKnown(turn - 1);
-            var growth = statusAtTurnStart.Item2 == null ? 0 : GrowthSpeed; // neutrals groeien niet
-            var healthDiffByOwner = HealthDiffInboundForTurn(turn);
-            var healthDiff = healthDiffByOwner.Sum(h=>h.Item2*(h.Key == statusAtTurnStart.Item2 ? 1 : -1));
-            var health = Math.Min(HealthMax, statusAtTurnStart.Item1 + growth + healthDiff);
-            var newStatus = (health, statusAtTurnStart.Item2, statusAtTurnStart.Item3);
-            if (health < 0)
+            if (!HealthAtTurnKnown.TryGetValue(turn, out var cachedValue))
             {
-                newStatus.health = health * -1;// TODO dit klopt niet bij meerdere inbound ships van verschillende owners
-                newStatus.Item2 = healthDiffByOwner.OrderByDescending(h => h.Item2).First().Key;
-                newStatus.Item3 = true;
+                var statusAtTurnStart = turn <= 1 ? (Health, Owner, false) : GetHealthAtTurnKnown(turn - 1);
+                var growth = statusAtTurnStart.Item2 == null ? 0 : GrowthSpeed; // neutrals groeien niet
+                var healthDiffByOwner = HealthDiffInboundForTurn(turn);
+                var healthDiff = healthDiffByOwner.Sum(h => h.Item2 * (h.Key == statusAtTurnStart.Item2 ? 1 : -1));
+                var health = Math.Min(HealthMax, statusAtTurnStart.Item1 + growth + healthDiff);
+                var newStatus = (health, statusAtTurnStart.Item2, statusAtTurnStart.Item3);
+                if (health < 0)
+                {
+                    newStatus.health = health * -1; // TODO dit klopt niet bij meerdere inbound ships van verschillende owners
+                    newStatus.Item2 = healthDiffByOwner.OrderByDescending(h => h.Item2).First().Key;
+                    newStatus.Item3 = true;
+                }
+
+                HealthAtTurnKnown.Add(turn, newStatus);
+                return newStatus;
             }
 
-            return newStatus;
+            return cachedValue;
         }
 
         private IEnumerable<(int? Key, float)> HealthDiffInboundForTurn(int turn) => HealthDiffInboundForTurns.GetValueOrDefault(turn, new List<(int? Key, float)>());
