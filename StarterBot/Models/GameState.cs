@@ -30,16 +30,6 @@ namespace StarterBot.Models
 
 
         // -- Calculate things at turn start --
-        public void SetRelationships()
-        {
-            Planets.ForEach(p=>p.Friendlyness = DetermineFriendlyness(p.Owner));
-            Ships.ForEach(s=>s.Friendlyness = DetermineFriendlyness(s.Owner));
-
-            Planets.ForEach(p=>p.NeighboringPlanets = Planets.Where(n=>p.Neighbors.Contains(n.Id)).OrderBy(n=>n.DistanceTo(p)).ToList());
-
-            Ships.ForEach(s => s.Target = Planets.Single(p => p.Id == s.TargetId));
-            Planets.ForEach(p => p.SetInboundShips(Ships.Where(s => s.TargetId == p.Id)));
-        }
 
         private Friendlyness DetermineFriendlyness(int? owner)
         {
@@ -55,10 +45,19 @@ namespace StarterBot.Models
         {
             PlanetsById = Planets.ToImmutableSortedDictionary(p => p.Id, p => p);
 
-            SetRelationships();
+            Planets.ForEach(p=>p.NeighboringPlanets = Planets.Where(n=>p.Neighbors.Contains(n.Id)).OrderBy(n=>n.DistanceTo(p)).ToList());
 
             Planets.ForEach(p=>p.NeighbouringPlanetsDistanceTurns = CalculateNeighbouringPlanetsDistanceTurns(p));
             Planets.ForEach(p=>p.ShortestPaths = CalculateShortestPaths(p));
+        }
+
+        public void TurnInit()
+        {
+            Planets.ForEach(p=>p.Friendlyness = DetermineFriendlyness(p.Owner));
+
+            Ships.ForEach(s=>s.Friendlyness = DetermineFriendlyness(s.Owner));
+            Ships.ForEach(s => s.Target = Planets.Single(p => p.Id == s.TargetId));
+            Planets.ForEach(p => p.SetInboundShips(Ships.Where(s => s.TargetId == p.Id)));
         }
 
         private List<OtherPlanet> CalculateShortestPaths(Planet planet)

@@ -3,3 +3,4 @@ bin
 obj
 *.sln.DotSettings.user
 publish
+.vs

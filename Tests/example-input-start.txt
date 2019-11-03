@@ -1,0 +1,3 @@
+﻿seed 354393706
+num-players 2
+player-id 0

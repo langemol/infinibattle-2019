@@ -15,6 +15,7 @@ namespace StarterBot
             {
                 gamestate.DoInitialCalculations();
             }
+            gamestate.TurnInit();
 
             var moves = new Turn(turn, gamestate).Play();
 

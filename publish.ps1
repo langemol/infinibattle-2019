@@ -1,5 +1,5 @@
 # Globals.
-$APIKEY = "YOUR_API_KEY"
+$APIKEY = "96b323d2-40bc-4778-bc7d-ac8d42574f21"
 $BASEURL = "https://infinibattle.infi.nl"
 $CONFIGURATION = "Release"
 
@@ -21,7 +21,7 @@ Function Build-Project {
 Function Get-Build-Directory {
     Param ([string]$configuration)
 
-    $binDirectory = "$($PSScriptRoot)\bin\$($configuration)"
+    $binDirectory = "$($PSScriptRoot)\StarterBot\bin\$($configuration)"
     $buildDirectory = Get-ChildItem -Path $binDirectory -Filter *.dll -Force -Recurse -File | % { $_[0].FullName } | Split-Path
 
     return $buildDirectory
@@ -58,6 +58,6 @@ Write-Output(Build-Project $CONFIGURATION)
 $buildDirectory = Get-Build-Directory($CONFIGURATION)
 $zipPath = "$($PSScriptRoot)\publish.zip"
 
-Create-Zip $buildDirectory $zipPath
+Create-Zip $buildDirectory[0] $zipPath
 
 Write-Output(Upload $BASEURL $APIKEY $zipPath)

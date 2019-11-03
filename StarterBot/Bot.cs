@@ -10,14 +10,7 @@ namespace StarterBot
     {
         public static void Start(Func<GameState, int, Move[]> strategy)
         {
-            var settings = new Settings
-            {
-                Seed = ReadInt("seed"),
-
-                Players = ReadInt("num-players"),
-                PlayerId = ReadInt("player-id")
-            };
-            var gamestate = new GameState(settings);
+            var gamestate = InitGameState();
 
             var turn = 0;
             string line;
@@ -31,25 +24,47 @@ namespace StarterBot
 
                 line = Console.ReadLine();
                 if (line != "turn-start") throw new Exception($"Expected 'turn-start', got '{line}");
-                
-                if (turn == 1)
-                {
-                    var gamePlanets = MapToGamePlanets(planets);
-                    gamestate.Planets = gamePlanets;
-                    gamestate.Ships = ships;
-                }
-                else
-                {
-                    AdjustForTurn(gamestate, planets, ships);
-                }
+
+                AdjustGamestateForTurn(turn, gamestate, planets, ships);
 
                 var moves = strategy.Invoke(gamestate, turn);
-                foreach (var move in moves)
-                {
-                    Console.WriteLine(move);
-                }
+                WriteMoves(moves);
+            }
+        }
 
-                Console.WriteLine("end-turn");
+        private static void WriteMoves(Move[] moves)
+        {
+            foreach (var move in moves)
+            {
+                Console.WriteLine(move);
+            }
+
+            Console.WriteLine("end-turn");
+        }
+
+        public static GameState InitGameState()
+        {
+            var settings = new Settings
+            {
+                Seed = ReadInt("seed"),
+
+                Players = ReadInt("num-players"),
+                PlayerId = ReadInt("player-id")
+            };
+            return new GameState(settings);
+        }
+
+        public static void AdjustGamestateForTurn(int turn, GameState gamestate, List<BarePlanetState> planets, List<Ship> ships)
+        {
+            if (turn == 1)
+            {
+                var gamePlanets = MapToGamePlanets(planets);
+                gamestate.Planets = gamePlanets;
+                gamestate.Ships = ships;
+            }
+            else
+            {
+                AdjustForTurn(gamestate, planets, ships);
             }
         }
 
@@ -118,7 +133,7 @@ namespace StarterBot
             return float.Parse(ReadValue(key));
         }
 
-        private static List<BarePlanetState> ReadPlanets()
+        public static List<BarePlanetState> ReadPlanets()
         {
             var planetCount = ReadInt("num-planets");
             var planets = new List<BarePlanetState>();
@@ -166,7 +181,7 @@ namespace StarterBot
             return parts.Skip(1).Select(int.Parse).ToArray();
         }
 
-        private static List<Ship> ReadShips()
+        public static List<Ship> ReadShips()
         {
             var shipCount = ReadInt("num-ships");
             var ships = new List<Ship>();
