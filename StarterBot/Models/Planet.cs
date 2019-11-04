@@ -115,7 +115,7 @@ namespace StarterBot.Models
                 var healthDiff = healthDiffByOwner.Sum(h => h.Item2 * (h.Key == statusAtTurnStart.Item2 ? 1 : -1));
                 var health = Math.Min(HealthMax, statusAtTurnStart.Item1 + growth + healthDiff);
                 var newStatus = (health, statusAtTurnStart.Item2, statusAtTurnStart.Item3);
-                if (health < 0)
+                if (health < 0.001F)
                 {
                     newStatus.health = health * -1; // TODO dit klopt niet bij meerdere inbound ships van verschillende owners
                     newStatus.Item2 = healthDiffByOwner.OrderByDescending(h => h.Item2).First().Key;
