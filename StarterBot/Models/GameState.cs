@@ -56,10 +56,16 @@ namespace StarterBot.Models
         {
             Planets.ForEach(p=>p.Friendlyness = DetermineFriendlyness(p.Owner));
 
-            Ships.ForEach(s=>s.Friendlyness = DetermineFriendlyness(s.Owner));
-            Ships.ForEach(s => s.Target = Planets.Single(p => p.Id == s.TargetId));
+            for (var i = 0; i < Ships.Count; i++)
+            {
+                Ships[i].Friendlyness = DetermineFriendlyness(Ships[i].Owner);
+                Ships[i].Target = Planets.FirstOrDefault(p => p.Id == Ships[i].TargetId);
+//                Ships.ForEach(s => s.Friendlyness = DetermineFriendlyness(s.Owner));
+//                Ships.ForEach(s => s.Target = Planets.Single(p => p.Id == s.TargetId));
+            }
+
             var shipsByTarget = Ships.GroupBy(s => s.TargetId).ToDictionary(s=>s.Key,s=>s.AsEnumerable());
-            Planets.ForEach(p=>p.SetInboundShips(shipsByTarget.GetValueOrDefault(p.Id, new List<Ship>())));
+            Planets.ForEach(p=>p.SetInboundShips(shipsByTarget.GetValueOrDefault(p.Id, new Ship[0])));
         }
 
         private List<OtherPlanet> CalculateShortestPaths(Planet planet)

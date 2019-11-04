@@ -90,7 +90,7 @@ namespace Tests
             var enemyPlanet = CreateEnemyPlanet(health:enemyHealth, x: 0, y: enemyDistanceTurns * CH.ShipSpeed);
             var planets = new List<Planet> { CreatePlanet(), enemyPlanet };
             Connect(planets[0], planets[1]);
-            var gameState = CreateGameState(planets, new List<Ship> { CreateEnemyShip(enemyPlanet, enemyDistanceTurns, 3) });
+            var gameState = CreateGameState(planets, new Ship[] { CreateEnemyShip(enemyPlanet, enemyDistanceTurns, 3) });
 
             var moves = TheMoleStrategy.PlayTurn(gameState, 1, new Stopwatch());
 
@@ -105,7 +105,7 @@ namespace Tests
             var enemyPlanet = CreateEnemyPlanet(health:enemyHealth, x: 0, y: enemyDistanceTurns * CH.ShipSpeed);
             var planets = new List<Planet> { CreatePlanet(), enemyPlanet };
             Connect(planets[0], planets[1]);
-            var gameState = CreateGameState(planets, new List<Ship> { CreateShip(enemyPlanet, enemyDistanceTurns, 10) });
+            var gameState = CreateGameState(planets, new [] { CreateShip(enemyPlanet, enemyDistanceTurns, 10) });
 
             var moves = TheMoleStrategy.PlayTurn(gameState, 1, new Stopwatch());
 
@@ -203,10 +203,10 @@ namespace Tests
             return CreatePlanet(health, radius, owner: 1, x, y);
         }
 
-        private static GameState CreateGameState(List<Planet> planets, List<Ship> ships = null)
+        private static GameState CreateGameState(List<Planet> planets, Ship[] ships = null)
         {
-            ships = ships ?? new List<Ship>();
-            return new GameState(new Settings { PlayerId = 0, Players = 2 }) { Planets = planets, Ships = ships };
+            ships = ships ?? new Ship[0];
+            return new GameState(new Settings { PlayerId = 0, Players = 2 }) { Planets = planets, Ships = new List<Ship>(ships) };
         }
     }
 }

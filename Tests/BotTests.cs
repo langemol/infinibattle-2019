@@ -87,14 +87,15 @@ namespace Tests
 
             planets = Bot.ReadPlanets();
             ships = Bot.ReadShips();
-            var x1 = watch.ElapsedMilliseconds;
+            var x1 = watch.ElapsedTicks;
             turn++;
             Bot.AdjustGamestateForTurn(turn, gameState, planets, ships);
-            var x2 = watch.ElapsedMilliseconds;
+            var x2 = watch.ElapsedTicks;
             
             moves = TheMoleStrategy.PlayTurn(gameState, turn, new Stopwatch());
             watch.Stop();
-            var x3 = watch.ElapsedMilliseconds;
+            var x3 = watch.ElapsedTicks;
+            var x4 = watch.ElapsedTicks;
         }
     }
 }

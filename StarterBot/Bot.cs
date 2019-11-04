@@ -57,13 +57,13 @@ namespace StarterBot
             return new GameState(settings);
         }
 
-        public static void AdjustGamestateForTurn(int turn, GameState gamestate, List<BarePlanetState> planets, List<Ship> ships)
+        public static void AdjustGamestateForTurn(int turn, GameState gamestate, BarePlanetState[] planets, Ship[] ships)
         {
             if (turn == 1)
             {
                 var gamePlanets = MapToGamePlanets(planets);
                 gamestate.Planets = gamePlanets;
-                gamestate.Ships = ships;
+                gamestate.Ships = new List<Ship>(ships);
             }
             else
             {
@@ -91,19 +91,20 @@ namespace StarterBot
             return result;
         }
 
-        private static void AdjustForTurn(GameState gamestate, List<BarePlanetState> planets, List<Ship> ships)
+        private static void AdjustForTurn(GameState gamestate, BarePlanetState[] planets, Ship[] ships)
         {
             var gamePlanets = gamestate.PlanetsById;
             AdjustForTurn(gamePlanets, planets);
 
-            gamestate.Ships = ships;
+            gamestate.Ships = new List<Ship>(ships);
         }
 
-        private static void AdjustForTurn(ImmutableSortedDictionary<int, Planet> gamePlanets, List<BarePlanetState> newState)
+        private static void AdjustForTurn(ImmutableSortedDictionary<int, Planet> gamePlanets, BarePlanetState[] newState)
         {
-            foreach (var planet in newState)
+            for (var i = 0; i<newState.Length;i++)
+//            foreach (var planet in newState)
             {
-                AdjustForTurn(gamePlanets[planet.Id], planet);
+                AdjustForTurn(gamePlanets[newState[i].Id], newState[i]);
             }
         }
 
@@ -136,14 +137,14 @@ namespace StarterBot
             return float.Parse(ReadValue(key));
         }
 
-        public static List<BarePlanetState> ReadPlanets()
+        public static BarePlanetState[] ReadPlanets()
         {
             var planetCount = ReadInt("num-planets");
-            var planets = new List<BarePlanetState>();
+            var planets = new BarePlanetState[planetCount];
 
             for (var i = 0; i < planetCount; i++)
             {
-                planets.Add(ReadPlanet());
+                planets[i] = ReadPlanet();
             }
 
             return planets;
@@ -184,14 +185,14 @@ namespace StarterBot
             return parts.Skip(1).Select(int.Parse).ToArray();
         }
 
-        public static List<Ship> ReadShips()
+        public static Ship[] ReadShips()
         {
             var shipCount = ReadInt("num-ships");
-            var ships = new List<Ship>();
+            var ships = new Ship[shipCount];
 
             for (var i = 0; i < shipCount; i++)
             {
-                ships.Add(ReadShip());
+                ships[i]=ReadShip();
             }
 
             return ships;

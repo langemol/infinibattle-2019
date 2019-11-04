@@ -50,7 +50,7 @@ namespace StarterBot.Models
                 return MaxGameTurns;
             }
 
-            if (InboundShips.Where(PH.IsHostile).Any(s => s.TurnsToReachTarget > turnsToReach) && healthAtTurn>GrowthSpeed)
+            if (InboundHostileShips.Any(s => s.TurnsToReachTarget > turnsToReach) && healthAtTurn>GrowthSpeed)
             {
                 return MaxGameTurns; // wacht lekker ff tot enemy zich tegen neutral heeft verzwakt
             }
@@ -85,14 +85,17 @@ namespace StarterBot.Models
         /// <summary>
         /// Ordered by nearness
         /// </summary>
-        public List<Ship> InboundShips { get; private set; } // calculated at turn start
+        public List<Ship> InboundShips { get; set; }
+        public List<Ship> InboundHostileShips { get; private set; } // calculated at turn start
         public void SetInboundShips(IEnumerable<Ship> ships)
         {
-            HealthAtTurnKnown=new Dictionary<int, (float health, int? owner, bool ownerChanged)>();
+            HealthAtTurnKnown=new Dictionary<int, (float health, int? owner, bool ownerChanged)>(NeighbouringPlanetsDistanceTurns?.Last()?.TurnsToReach??0);
             InboundShips = ships.OrderBy(s => s.TurnsToReachTarget).ToList();
+            InboundHostileShips = InboundShips.Where(s=>PH.IsHostile(s)).ToList();
             HealthDiffInboundForTurns =
                 InboundShips.GroupBy(s => s.TurnsToReachTarget, s => s).ToDictionary(g => g.Key,
-                    g => g.GroupBy(s2=>s2.Owner).Select(s=>(s.Key,s.Sum(s2 => s2.Power))));
+                    g => g.GroupBy(s2=>s2.Owner).Select(s=>(s.Key,s.Sum(s2 => s2.Power))).ToList()
+                    );
         }
 
         private Dictionary<int,(float health, int? owner, bool ownerChanged)> HealthAtTurnKnown { get; set; }
@@ -126,11 +129,11 @@ namespace StarterBot.Models
             return cachedValue;
         }
 
-        private IEnumerable<(int? Key, float)> HealthDiffInboundForTurn(int turn) => HealthDiffInboundForTurns.GetValueOrDefault(turn, new List<(int? Key, float)>());
+        private List<(int? Key, float)> HealthDiffInboundForTurn(int turn) => HealthDiffInboundForTurns.GetValueOrDefault(turn, new List<(int? Key, float)>());
         /// <summary>
         /// based on known inbound ships (both friendly and hostile)
         /// </summary>
-        private Dictionary<int, IEnumerable<(int? Key, float)>> HealthDiffInboundForTurns { get; set; }
+        private Dictionary<int, List<(int? Key, float)>> HealthDiffInboundForTurns { get; set; }
 
         public Dictionary<int, float> HealthPossibleToReceiveInTurns(int playerId)
         {

@@ -76,7 +76,7 @@ namespace StarterBot
 
                 // TODO loopje
                 var source2 = sources.Skip(1).FirstOrDefault();
-                if (source2 != null && !source.Target.InboundShips.Any(PH.IsHostile) && !source2.Target.InboundShips.Any(PH.IsHostile))
+                if (source2 != null && !source.Target.InboundHostileShips.Any() && !source2.Target.InboundHostileShips.Any())
                 {
                     var source2Health = source2.Target.Health - PlanetMinHealth;
                     var targetHealth2 = target.GetHealthAtTurnKnown(source2.TurnsToReach);
@@ -118,8 +118,8 @@ namespace StarterBot
 
                 // TODO loopje
                 var source2 = sources.Skip(1).FirstOrDefault();
-                if (source2 != null && !source.Target.InboundShips.Any(PH.IsHostile) &&
-                    !source2.Target.InboundShips.Any(PH.IsHostile))
+                if (source2 != null && !source.Target.InboundHostileShips.Any() &&
+                    !source2.Target.InboundHostileShips.Any())
                 {
                     var source2Health = source2.Target.Health - PlanetMinHealth;
                     var targetHealth2 = target.GetHealthAtTurnKnown(source2.TurnsToReach);
@@ -149,20 +149,21 @@ namespace StarterBot
                 if (planet.NeighboringPlanets.All(PH.IsMine))// misschien ook als alleen Mine of Neutral, wanneer er andere planet is die wel NeighbouringEnemyPlanet heeft, om meer te focussen op enemy?
                 {// TODO mag ook als 1tje niet van mij is allemaal naar die sturen
 //                    Console.WriteLine($"# {planet.Id} surrounded by friendly");
-                    if (!planet.InboundShips.Any(PH.IsHostile)) // TODO zend zoveel als overblijft na laatste ship..
+                    if (!planet.InboundHostileShips.Any()) // TODO zend zoveel als overblijft na laatste ship..
                     {
                         // TODO rekening houden met dat 1 van die planeten binnenkort naar de enemy gaat
-                        var planetThatNeedsReinforcementsMost = 
-                            planet.NeighboringPlanets.OrderBy(p=>p.NearestEnemyPlanetTurns).First(); // TODO which planet is that, houd rekening met HealthMax
+                        var planetThatNeedsReinforcementsMost =
+                            planet.ShortestPaths.FirstOrDefault(p => PH.IsHostile(p.Target)).Via;
+//                            planet.NeighboringPlanets.OrderBy(p=>p.NearestEnemyPlanetTurns).First(); // TODO which planet is that, houd rekening met HealthMax
                         // TODO divide between multiple planets?
                         var movePower = planet.Health - PlanetMinHealth;
-                        AddMove(movePower, planet, planetThatNeedsReinforcementsMost);
+                        AddMove(movePower, planet, planetThatNeedsReinforcementsMost, false);
                     }
                     continue;
                 }
 
                 // check of planeet wel health kan missen
-                var enemies = planet.NeighboringHostilePlanets.ToList();
+//                var enemies = planet.NeighboringHostilePlanets.ToList();
                 //planet.HealthPossibleToReceiveInTurns(enemyPlayer);
 //                if (enemies.Any())
 //                {
@@ -186,7 +187,7 @@ namespace StarterBot
                 }
 
                 var powerNeeded = targetHealth.health + PlanetMinTakeoverHealth;
-                var planetHealth = planet.Health- PlanetMinHealth;
+//                var planetHealth = planet.Health- PlanetMinHealth;
 //                Console.WriteLine($"# {planet.Id} targetting {target.Target.Id} with {planetHealth} against {powerNeeded}");
                 if (CheckIfEnoughHealthToSendShips(powerNeeded, planet))//planetHealth > powerNeeded && !planet.InboundShips.Any(PH.IsHostile))) // only if enemy planet can be taken
                 {
@@ -212,13 +213,13 @@ namespace StarterBot
         /// <returns></returns>
         private bool CheckIfEnoughHealthToSendShips(float powerNeeded, Planet sourcePlanet)
         {
-            if (!sourcePlanet.InboundShips.Any(PH.IsHostile))
+            if (!sourcePlanet.InboundHostileShips.Any())
             {
                 var sourceHealth = sourcePlanet.Health - PlanetMinHealth;
                 return sourceHealth >= powerNeeded;
             }
 
-            var turnsToLastShip = sourcePlanet.InboundShips.Where(PH.IsHostile).Max(s => s.TurnsToReachTarget);
+            var turnsToLastShip = sourcePlanet.InboundHostileShips.Last().TurnsToReachTarget;
             var healthAtTurnKnown = sourcePlanet.GetHealthAtTurnKnown(turnsToLastShip);
             if (healthAtTurnKnown.owner != _me) return false; // eigenlijk moet je het minimale health in deze turns berekenen... kan zijn dat je akkoord geeft maar alsnog tussendoor daardoor planeet weggeeft
 
@@ -247,7 +248,7 @@ namespace StarterBot
                 var healthNeeded = planet.healthNeeded;
                 SendHelp(planetsThatCanEasilyHelp, healthNeeded, planet);
 
-                foreach (var hostiles in planet.p.InboundShips.Where(PH.IsHostile).GroupBy(s => s.TurnsToReachTarget).Skip(1))
+                foreach (var hostiles in planet.p.InboundHostileShips.GroupBy(s => s.TurnsToReachTarget).Skip(1))
                 {
                     var health = planet.p.GetHealthAtTurnKnown(hostiles.First().TurnsToReachTarget);
                     if (health.owner != _me) // or PlanetMinHealth
@@ -272,7 +273,7 @@ namespace StarterBot
             }
         }
 
-        private (IEnumerable<Planet> hostiles, IEnumerable<Planet> neutrals) GetPossibleTargets()
+        private (IList<Planet> hostiles, IList<Planet> neutrals) GetPossibleTargets()
         {
             var possibleNeutralTargets = new List<(Planet, int)>();
             var possibleHostileTargets = new List<(Planet, int)>();
@@ -327,11 +328,11 @@ namespace StarterBot
 
         private List<(Planet p, int turn, float healthNeeded)> GetPlanetsThatNeedHelp(IEnumerable<Planet> myPlanets)
         {
-            var planetsWithInboundHostiles = myPlanets.Where(p => p.InboundShips.Any(PH.IsHostile));
+            var planetsWithInboundHostiles = myPlanets.Where(p => p.InboundHostileShips.Any());
             var planetsThatNeedHelp = new List<(Planet p, int turn, float healthNeeded)>();
             foreach (var planet in planetsWithInboundHostiles)
             {
-                foreach (var hostile in planet.InboundShips.Where(PH.IsHostile))
+                foreach (var hostile in planet.InboundHostileShips)
                 {
                     var health = planet.GetHealthAtTurnKnown(hostile.TurnsToReachTarget);
                     if (health.ownerChanged) // or PlanetMinHealth
@@ -342,7 +343,7 @@ namespace StarterBot
                 }
             }
 
-            foreach (var target in _gameState.Ships.Where(PH.IsMine).Where(s => !PH.IsMine(s.Target)).GroupBy(s => s.Target))
+            foreach (var target in _gameState.Ships.Where(s=>PH.IsMine(s)).Where(s => !PH.IsMine(s.Target)).GroupBy(s => s.Target))
             {
                 var lastShip = target.OrderByDescending(s => s.TurnsToReachTarget).First();
                 var status = target.Key.GetHealthAtTurnKnown(lastShip.TurnsToReachTarget);
@@ -356,27 +357,24 @@ namespace StarterBot
             return planetsThatNeedHelp;
         }
 
-        private void AddMove(float movePower, Planet source, Planet target)
+        private void AddMove(float movePower, Planet source, Planet target, bool recalculate = true)
         {
             _moves.Add(new Move(movePower, source.Id, target.Id));
-            AdjustGamestateForNewMove(movePower, source, target);
-        }
 
-        /// <summary>
-        /// als je alles van te voren compleet netjes bedenkt is dit niet nodig
-        /// </summary>
-        private void AdjustGamestateForNewMove(float movePower, Planet source, Planet target)
-        {
+            // adjust game for new move
             var newShip = new Ship
             {
                 Friendlyness = Friendlyness.Owner, Owner = _gameState.Settings.PlayerId, Power = movePower, Target = target,
                 TargetId = target.Id, X = source.X, Y = source.Y
             };
             source.Health -= movePower;
-            _gameState.Ships.Add(newShip);
-            var targetInboundShips = target.InboundShips;
-            targetInboundShips.Add(newShip);
-            target.SetInboundShips(targetInboundShips);
+            if (recalculate)
+            {
+                _gameState.Ships.Add(newShip);
+                var targetInboundShips = target.InboundShips;
+                targetInboundShips.Add(newShip);
+                target.SetInboundShips(targetInboundShips);
+            }
         }
     }
 }
