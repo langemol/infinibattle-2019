@@ -237,6 +237,7 @@ namespace StarterBot
         private void SendHelp(List<Planet> planetsThatCanEasilyHelp, float healthNeeded,
             (Planet p, int turn, float healthNeeded) planet)
         {
+            healthNeeded += PlanetMinTakeoverHealth; // ietsje extra sturen, 0 is tricky
             foreach (var helper in planetsThatCanEasilyHelp)
             {
                 var helperHealth = helper.Health- PlanetMinHealth;
