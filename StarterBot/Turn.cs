@@ -225,10 +225,10 @@ namespace StarterBot
 
                 foreach (var hostiles in planet.p.InboundShips.Where(PH.IsHostile).GroupBy(s => s.TurnsToReachTarget).Skip(1))
                 {
-                    var health = planet.p.GetHealthAtTurnKnown(hostiles.First().TurnsToReachTarget).health;
-                    if (health < 0) // or PlanetMinHealth
+                    var health = planet.p.GetHealthAtTurnKnown(hostiles.First().TurnsToReachTarget);
+                    if (health.owner != _me) // or PlanetMinHealth
                     {
-                        SendHelp(planetsThatCanEasilyHelp, health, planet);
+                        SendHelp(planetsThatCanEasilyHelp, health.health, planet);
                     }
                 }
             }
