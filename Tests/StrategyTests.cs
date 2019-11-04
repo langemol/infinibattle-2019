@@ -154,6 +154,29 @@ namespace Tests
             Assert.LessOrEqual(enemyHealth, moves.Sum(m => m.Power));
         }
 
+//        [Test]
+//        public void WageWarForPlanet()
+//        {
+//            var planet1 = CreatePlanet(27F, 24.585754F, 1, 552.32776F, 239.91684F);
+//            var planetEnemy = CreatePlanet(3F, 27.995485F, 0, 275.55322F, 220.97034F);
+//            var neutralHealth = 3F;
+//            var planetNeutral = CreatePlanet(neutralHealth, 38.397026F, owner: null, 443.6608F, 187.52002F);
+//            
+//            Connect(planet1, planetEnemy);
+//            Connect(planet1, planetNeutral);
+//            Connect(planetEnemy, planetNeutral);
+//            var gameState = CreateGameState(new List<Planet> { planet1, planetEnemy, planetNeutral });
+//            gameState.Ships
+//
+//            var moves = TheMoleStrategy.PlayTurn(gameState, 1, new Stopwatch());
+//
+//            Assert.AreEqual(2, moves.Length);
+//            Assert.AreEqual(1, moves.Count(m => m.Source == planet1.Id));
+//            Assert.AreEqual(1, moves.Count(m => m.Source == planetEnemy.Id));
+//            Assert.AreEqual(2, moves.Count(m => m.Target == planetNeutral.Id));
+//            Assert.LessOrEqual(neutralHealth, moves.Sum(m => m.Power));
+//        }
+
         private static Ship CreateShip(BarePlanetState target, int distanceFromTarget, int power, int owner=0)
         {
             return new Ship { Owner = owner, TargetId = target.Id, X = 0, Y = (distanceFromTarget - 1) * CH.ShipSpeed, Power = power };

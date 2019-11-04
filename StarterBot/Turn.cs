@@ -228,7 +228,7 @@ namespace StarterBot
                     var health = planet.p.GetHealthAtTurnKnown(hostiles.First().TurnsToReachTarget).health;
                     if (health < 0) // or PlanetMinHealth
                     {
-                        SendHelp(planetsThatCanEasilyHelp, health * -1, planet);
+                        SendHelp(planetsThatCanEasilyHelp, health, planet);
                     }
                 }
             }
@@ -311,7 +311,7 @@ namespace StarterBot
                     var health = planet.GetHealthAtTurnKnown(hostile.TurnsToReachTarget);
                     if (health.ownerChanged) // or PlanetMinHealth
                     {
-                        planetsThatNeedHelp.Add((planet, hostile.TurnsToReachTarget, health.health * -1));
+                        planetsThatNeedHelp.Add((planet, hostile.TurnsToReachTarget, health.health));
                         break;
                     }
                 }
