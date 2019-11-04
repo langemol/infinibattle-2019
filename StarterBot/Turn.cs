@@ -84,7 +84,7 @@ namespace StarterBot
                             var powerNeeded2 = targetHealth2.health + PlanetMinHealth;
                             if (sourceHealth + source2Health >= powerNeeded2) // only if enemy planet can be taken
                             {
-                                var hq = (sourceHealth + source2Health - powerNeeded2) / (sourceHealth + source2Health);
+                                var hq = (powerNeeded2) / (sourceHealth + source2Health);
                                 // TODO half/half? dichtste meest? dichtste wachten tot even ver?
                                 AddMove(hq * sourceHealth, source.Target,
                                     target); // TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
@@ -125,7 +125,7 @@ namespace StarterBot
                             var powerNeeded2 = targetHealth2.health + PlanetMinHealth;
                             if (sourceHealth + source2Health >= powerNeeded2) // only if enemy planet can be taken
                             {
-                                var hq = (sourceHealth + source2Health - powerNeeded2) / (sourceHealth + source2Health);
+                                var hq = (powerNeeded2) / (sourceHealth + source2Health);
                                 // TODO half/half? dichtste meest? dichtste wachten tot even ver?
                                 AddMove(hq * sourceHealth, source.Target,
                                     target); // TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem

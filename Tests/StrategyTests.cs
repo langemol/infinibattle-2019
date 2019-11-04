@@ -132,6 +132,28 @@ namespace Tests
             Assert.LessOrEqual(enemyHealth, moves.Single().Power);
         }
 
+        [Test]
+        public void AttackNeutralWithTwoPlanets()
+        {
+            var planet1 = CreatePlanet(29.9F, 26.693428F, 0, 200.47342F, 150.36024F);
+            var planet2 = CreatePlanet(19.9F, 30.496107F, 0, 93.75485F, 61.48056F);
+            var enemyHealth = 47F;
+            var planetNeutral = CreatePlanet(enemyHealth, 28.83773F, owner: null, 83.12419F, 237.5396F);
+            
+            Connect(planet1, planet2);
+            Connect(planet1, planetNeutral);
+            Connect(planet2, planetNeutral);
+            var gameState = CreateGameState(new List<Planet> { planet1, planet2, planetNeutral });
+
+            var moves = TheMoleStrategy.PlayTurn(gameState, 1, new Stopwatch());
+
+            Assert.AreEqual(2, moves.Length);
+            Assert.AreEqual(1, moves.Count(m => m.Source == planet1.Id));
+            Assert.AreEqual(1, moves.Count(m => m.Source == planet2.Id));
+            Assert.AreEqual(2, moves.Count(m => m.Target == planetNeutral.Id));
+            Assert.LessOrEqual(enemyHealth, moves.Sum(m => m.Power));
+        }
+
         private static Ship CreateShip(BarePlanetState target, int distanceFromTarget, int power, int owner=0)
         {
             return new Ship { Owner = owner, TargetId = target.Id, X = 0, Y = (distanceFromTarget - 1) * CH.ShipSpeed, Power = power };
@@ -148,7 +170,7 @@ namespace Tests
             p2.Neighbors = p2.Neighbors.Concat(new[] { p1.Id }).ToArray();
         }
 
-        private static Planet CreatePlanet(float health = 10F, int radius = 20, int? owner = 0, float x = 0F, float y = 0F)
+        private static Planet CreatePlanet(float health = 10F, float radius = 20, int? owner = 0, float x = 0F, float y = 0F)
         {
             return new Planet { Id = _id++, Health = health, Owner = owner, Radius = radius, X = x, Y = y, Neighbors = new int[0] };
         }
