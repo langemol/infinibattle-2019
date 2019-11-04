@@ -10,6 +10,7 @@ namespace StarterBot
     internal class Turn
     {
         private const float PlanetMinHealth = 1.0001F;//little extra to be sure, because of rounding
+        private const float PlanetMinTakeoverHealth = .0001F;//little extra to be sure, because of rounding
         private const int MaxTurns = 500;
 
         private readonly int _turn;
@@ -55,7 +56,7 @@ namespace StarterBot
             
             var possibleTargets = GetPossibleTargets();
 //            Console.WriteLine($"# {watch.ElapsedMilliseconds} Checked targets");
-            if (possibleTargets.hostiles.Any())
+            if (possibleTargets.hostiles.Any()) // TODO twee of meer... op basis van myPlanets.Count? misschien alleen Neutral? <---------------
             {
                 var target = possibleTargets.hostiles.First();
                 var sources = target.NeighboringFriendlyPlanets;
@@ -65,8 +66,8 @@ namespace StarterBot
                 var targetHealth = target.GetHealthAtTurnKnown(source.TurnsToReach).health;
                 if (!source.Target.InboundShips.Any(PH.IsHostile))
                 {
-
-                    var powerNeeded = targetHealth + PlanetMinHealth;
+                    // TODO Check voor target.EnemyNeighbours die dichterbij zijn dan source.TurnsToReach  (en extract dit ff naar een method?) <--------------
+                    var powerNeeded = targetHealth + PlanetMinTakeoverHealth;
                     if (sourceHealth >= powerNeeded) // only if enemy planet can be taken
                     {
                         AddMove(powerNeeded, source.Target,
@@ -81,7 +82,7 @@ namespace StarterBot
                         var targetHealth2 = target.GetHealthAtTurnKnown(source2.TurnsToReach);
                         if (targetHealth2.owner != _me)
                         {
-                            var powerNeeded2 = targetHealth2.health + PlanetMinHealth;
+                            var powerNeeded2 = targetHealth2.health + PlanetMinTakeoverHealth;
                             if (sourceHealth + source2Health >= powerNeeded2) // only if enemy planet can be taken
                             {
                                 var hq = (powerNeeded2) / (sourceHealth + source2Health);
@@ -107,7 +108,7 @@ namespace StarterBot
                 var targetHealth = target.GetHealthAtTurnKnown(source.TurnsToReach).health;
                 if (!source.Target.InboundShips.Any(PH.IsHostile))
                 {
-                    var powerNeeded = targetHealth + PlanetMinHealth;
+                    var powerNeeded = targetHealth + PlanetMinTakeoverHealth;
                     if (sourceHealth >= powerNeeded) // only if enemy planet can be taken
                     {
                         AddMove(powerNeeded, source.Target,
@@ -122,7 +123,7 @@ namespace StarterBot
                         var targetHealth2 = target.GetHealthAtTurnKnown(source2.TurnsToReach);
                         if (targetHealth2.owner != _me)
                         {
-                            var powerNeeded2 = targetHealth2.health + PlanetMinHealth;
+                            var powerNeeded2 = targetHealth2.health + PlanetMinTakeoverHealth;
                             if (sourceHealth + source2Health >= powerNeeded2) // only if enemy planet can be taken
                             {
                                 var hq = (powerNeeded2) / (sourceHealth + source2Health);
@@ -181,7 +182,7 @@ namespace StarterBot
                     continue;
                 }
 
-                var powerNeeded = targetHealth.health + PlanetMinHealth;
+                var powerNeeded = targetHealth.health + PlanetMinTakeoverHealth;
                 var planetHealth = planet.Health- PlanetMinHealth;
 //                Console.WriteLine($"# {planet.Id} targetting {target.Target.Id} with {planetHealth} against {powerNeeded}");
                 if (planetHealth > powerNeeded && !planet.InboundShips.Any(PH.IsHostile)) // only if enemy planet can be taken
