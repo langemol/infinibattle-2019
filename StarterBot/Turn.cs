@@ -102,42 +102,15 @@ namespace StarterBot
             if (possibleTargets.neutrals.Any())
             {
                 var target = possibleTargets.neutrals.First();
-                var sources = target.NeighboringFriendlyPlanets;
+                AttackNeutral(target);
 
-                var source = sources.First();
-                var sourceHealth = source.Target.Health - PlanetMinHealth;
-                var targetHealth = target.GetHealthAtTurnKnown(source.TurnsToReach).health;
-                var powerNeeded = targetHealth + PlanetMinTakeoverHealth;
-                if (CheckIfEnoughHealthToSendShips(powerNeeded, source.Target))
+                if (myPlanets.Count > 3)
                 {
-//                    if (sourceHealth >= powerNeeded) // only if enemy planet can be taken
-//                    {
-                    AddMove(powerNeeded, source.Target,
-                        target); // TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
-                }
-
-                // TODO loopje
-                var source2 = sources.Skip(1).FirstOrDefault();
-                if (source2 != null && !source.Target.InboundHostileShips.Any() &&
-                    !source2.Target.InboundHostileShips.Any())
-                {
-                    var source2Health = source2.Target.Health - PlanetMinHealth;
-                    var targetHealth2 = target.GetHealthAtTurnKnown(source2.TurnsToReach);
-                    if (targetHealth2.owner != _me)
+                    var target2 = possibleTargets.neutrals.Skip(1).FirstOrDefault();
+                    if (target2 != null)
                     {
-                        var powerNeeded2 = targetHealth2.health + PlanetMinTakeoverHealth;
-                        if (sourceHealth + source2Health >= powerNeeded2) // only if enemy planet can be taken
-                        {
-                            var hq = (powerNeeded2) / (sourceHealth + source2Health);
-                            // TODO half/half? dichtste meest? dichtste wachten tot even ver?
-                            AddMove(hq * sourceHealth, source.Target,
-                                target); // TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
-                            AddMove(hq * source2Health, source2.Target,
-                                target); // TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
-                        }
+                        AttackNeutral(target2);
                     }
-
-//                    }
                 }
             }
 //            Console.WriteLine($"# {watch.ElapsedMilliseconds} sent to neutrals");
@@ -153,8 +126,8 @@ namespace StarterBot
                     {
                         // TODO rekening houden met dat 1 van die planeten binnenkort naar de enemy gaat
                         var planetThatNeedsReinforcementsMost =
-                            planet.ShortestPaths.FirstOrDefault(p => PH.IsHostile(p.Target)).Via;
-//                            planet.NeighboringPlanets.OrderBy(p=>p.NearestEnemyPlanetTurns).First(); // TODO which planet is that, houd rekening met HealthMax
+//                            planet.ShortestPaths.FirstOrDefault(p => PH.IsHostile(p.Target)).Via;
+                            planet.NeighboringPlanets.OrderBy(p=>p.NearestEnemyPlanetTurns).First(); // TODO which planet is that, houd rekening met HealthMax
                         // TODO divide between multiple planets?
                         var movePower = planet.Health - PlanetMinHealth;
                         AddMove(movePower, planet, planetThatNeedsReinforcementsMost, false);
@@ -205,6 +178,48 @@ namespace StarterBot
             return _moves;
         }
 
+        private void AttackNeutral(Planet target)
+        {
+            var sources = target.NeighboringFriendlyPlanets;
+
+            var source = sources.First();
+            var sourceHealth = source.Target.Health - PlanetMinHealth;
+            var targetHealth = target.GetHealthAtTurnKnown(source.TurnsToReach).health;
+            var powerNeeded = targetHealth + PlanetMinTakeoverHealth;
+            if (CheckIfEnoughHealthToSendShips(powerNeeded, source.Target))
+            {
+//                    if (sourceHealth >= powerNeeded) // only if enemy planet can be taken
+//                    {
+                AddMove(powerNeeded, source.Target,
+                    target); // TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
+            }
+
+            // TODO loopje
+            var source2 = sources.Skip(1).FirstOrDefault();
+            if (source2 != null && !source.Target.InboundHostileShips.Any() &&
+                !source2.Target.InboundHostileShips.Any())
+            {
+                // TODO DIT KAN EERDER <----------------------------------------------!!!!!!!!!!!!!!!!!!!
+                var source2Health = source2.Target.Health - PlanetMinHealth;
+//                    var targetHealth2 = target.GetHealthAtTurnKnown(source2.TurnsToReach);
+//                    if (targetHealth2.owner != _me)
+                {
+//                        var powerNeeded2 = targetHealth2.health + PlanetMinTakeoverHealth;
+                    if (sourceHealth + source2Health >= powerNeeded) // only if enemy planet can be taken
+                    {
+                        var hq = (powerNeeded) / (sourceHealth + source2Health);
+                        // TODO half/half? dichtste meest? dichtste wachten tot even ver?
+                        AddMove(hq * sourceHealth, source.Target,
+                            target); // TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
+                        AddMove(hq * source2Health, source2.Target,
+                            target); // TODO meer sturen. Als andere enemy planet dichterbij is dan source, dan kunnen we elke turn allebei steeds een beetje sturen en blijft het alsnog van hem
+                    }
+                }
+
+//                    }
+            }
+        }
+
         /// <summary>
         /// NOTE: source.Target is eigen planeet die ships wil gaan sturen
         /// </summary>
@@ -219,11 +234,20 @@ namespace StarterBot
                 return sourceHealth >= powerNeeded;
             }
 
-            var turnsToLastShip = sourcePlanet.InboundHostileShips.Last().TurnsToReachTarget;
-            var healthAtTurnKnown = sourcePlanet.GetHealthAtTurnKnown(turnsToLastShip);
-            if (healthAtTurnKnown.owner != _me) return false; // eigenlijk moet je het minimale health in deze turns berekenen... kan zijn dat je akkoord geeft maar alsnog tussendoor daardoor planeet weggeeft
+            for (var i = 0; i < sourcePlanet.InboundHostileShips.Count; i++)
+            {
+                var inboundHostile = sourcePlanet.InboundHostileShips[i];
+                var turnsToLastShip = inboundHostile.TurnsToReachTarget;
+                var healthAtTurnKnown = sourcePlanet.GetHealthAtTurnKnown(turnsToLastShip);
+                if (healthAtTurnKnown.owner != _me)
+                    return
+                        false; // eigenlijk moet je het minimale health in deze turns berekenen... kan zijn dat je akkoord geeft maar alsnog tussendoor daardoor planeet weggeeft
 
-            return healthAtTurnKnown.health > powerNeeded;
+
+                if (healthAtTurnKnown.health <= powerNeeded) return false;
+            }
+
+            return true;
         }
 
         private void HelpPlanets(List<(Planet p, int turn, float healthNeeded)> planetsThatNeedHelp, List<Planet> planetsThatCanAttack)
@@ -332,11 +356,14 @@ namespace StarterBot
             var planetsThatNeedHelp = new List<(Planet p, int turn, float healthNeeded)>();
             foreach (var planet in planetsWithInboundHostiles)
             {
-                foreach (var hostile in planet.InboundHostileShips)
+                Console.WriteLine($"# {planet.Id} has inbound hostiles");
+                for (var i = 0; i < planet.InboundHostileShips.Count; i++)
                 {
+                    var hostile = planet.InboundHostileShips[i];
                     var health = planet.GetHealthAtTurnKnown(hostile.TurnsToReachTarget);
                     if (health.ownerChanged) // or PlanetMinHealth
                     {
+                        Console.WriteLine($"# {planet.Id} needs help");
                         planetsThatNeedHelp.Add((planet, hostile.TurnsToReachTarget, health.health));
                         break;
                     }
